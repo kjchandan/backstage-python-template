@@ -1,0 +1,19 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+
+metadata:
+  name: ${{ values.repoName }}
+  description: Python application created using Backstage Scaffolder
+
+  tags:
+    - python
+    - backstage
+
+spec:
+  type: service
+
+  lifecycle: development
+
+  owner: ${{ values.group }}
+
+  system: ${{ values.system }}

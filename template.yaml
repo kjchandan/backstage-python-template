@@ -1,0 +1,127 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+
+metadata:
+  name: python-repository-template
+  title: Create Python Repository
+  description: >
+    Creates a new Python GitHub repository with a README,
+    catalog-info.yaml, requirements files and GitHub Actions workflow.
+
+  tags:
+    - python
+    - github
+    - backstage
+
+spec:
+  owner: platform-team
+  type: service
+
+  parameters:
+
+    - title: Repository Information
+      required:
+        - system
+        - group
+        - githubOrg
+        - component
+        - repoName
+
+      properties:
+
+        system:
+          title: System
+          type: string
+          description: Select System
+          enum:
+            - Finance
+            - HR
+            - Platform
+            - Engineering
+
+        group:
+          title: Group
+          type: string
+          description: Select Group
+          enum:
+            - Payments
+            - DevOps
+            - Backend
+            - QA
+
+        githubOrg:
+          title: GitHub Organization
+          type: string
+          description: Select GitHub Organization
+          enum:
+            - Honeywell
+            - DevTools
+            - Platform
+
+        component:
+          title: Component
+          type: string
+          description: Select Component
+          enum:
+            - API
+            - Service
+            - Library
+
+        repoName:
+          title: Repository Name
+          type: string
+          description: Enter GitHub Repository Name
+
+  steps:
+
+  - id: fetch-base
+    name: Fetch Skeleton
+    action: fetch:template
+
+    input:
+      url: ./skeleton
+
+      values:
+        repoName: ${{ parameters.repoName }}
+        system: ${{ parameters.system }}
+        group: ${{ parameters.group }}
+        githubOrg: ${{ parameters.githubOrg }}
+        component: ${{ parameters.component }}
+
+  - id: publish
+    name: Create GitHub Repository
+    action: publish:github
+
+    input:
+      allowedHosts:
+        - github.com
+
+      repoUrl: github.com?owner=${{ parameters.githubOrg }}&repo=${{ parameters.repoName }}
+
+      description: Python Repository generated using Backstage
+
+      defaultBranch: main
+
+      protectDefaultBranch: true
+
+      deleteBranchOnMerge: true
+
+      repoVisibility: private
+
+  - id: register
+    name: Register in Backstage Catalog
+    action: catalog:register
+
+    input:
+      repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+      catalogInfoPath: catalog-info.yaml
+
+  output:
+
+    links:
+      - title: Open Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+
+      - title: Open in Backstage
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
